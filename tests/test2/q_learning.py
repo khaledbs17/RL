@@ -1,6 +1,6 @@
 import numpy as np
 from tqdm import tqdm
-import secret_envs_wrapper
+
 import environnement_two.line_world as lw
 import environnement_two.grid_world as gw
 import environnement_two.monty_hall_level_2 as mh
@@ -64,12 +64,6 @@ def play_game(game, parameters, results_path, algorithm_name):
             env = gw.GridWorld(config)
         case "MontyHallLevel2":
             env = mh.MontyHallLevel2()
-        case "SecretEnv0":
-            env = secret_envs_wrapper.SecretEnv0()
-        case "SecretEnv1":
-            env = secret_envs_wrapper.SecretEnv1()
-        case "SecretEnv2":
-            env = secret_envs_wrapper.SecretEnv2()
         case _:
             print("Game not found")
             return 0
