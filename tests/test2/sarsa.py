@@ -1,11 +1,12 @@
 from tqdm import tqdm
 import secret_envs_wrapper
-import environnements.lineworld as lw
-from utils import load_config, calcul_policy, play_a_game_by_Pi, choose_action, update_Q, observe_R_S_prime, save_results_to_pickle
-import environnements.gridworld as gw
+import environnement_two.line_world as lw
+import environnement_two.grid_world as gw
+import environnement_two.monty_hall_level_2 as mh
+from utils import load_config, calcul_policy, play_a_game_by_Pi, choose_action, update_Q, observe_R_S_prime, \
+    save_results_to_pickle
 
-
-congig_file = "./config.yaml"
+config_file = "D:\projet_DRL - Copie\config.yaml"
 
 
 def sarsa(env, alpha: float = 0.1, epsilon: float = 0.1, gamma: float = 0.999, nb_iter: int = 500):
@@ -36,20 +37,23 @@ def sarsa(env, alpha: float = 0.1, epsilon: float = 0.1, gamma: float = 0.999, n
     return Q
 
 
-def play_game(game, parameters, results_path):
+def play_game(game, parameters, results_path, algorithm_name):
     if "SecretEnv" not in game:
-        config = load_config(congig_file, game)
+        config = load_config(config_file, game)
     alpha = parameters["alpha"]
     epsilon = parameters["epsilon"]
     gamma = parameters["gamma"]
     nb_iter = parameters["nb_iter"]
     match game:
         case "LineWorld":
-            config = load_config(congig_file, game)
-            env = lw.LineWorld(config)
+            config = load_config(config_file, game)
+            env = lw.LineWorld(config["size"], config["start"], config["goal"])
         case "GridWorld":
-            config = load_config(congig_file, game)
+            config = load_config(config_file, game)
             env = gw.GridWorld(config)
+        case "MontyHallLevel2":
+            config = load_config(config_file, game)
+            env = mh.MontyHallLevel2(config)
         case "SecretEnv0":
             env = secret_envs_wrapper.SecretEnv0()
         case "SecretEnv1":
@@ -63,11 +67,16 @@ def play_game(game, parameters, results_path):
     Pi = calcul_policy(Q_optimal)
     env.reset()
     save_results_to_pickle(Q_optimal, Pi, results_path)
-    #play_a_game_by_Pi(env, Pi)
+    play_a_game_by_Pi(env, Pi, algorithm_name, game)
 
 
-# if __name__ == '__main__':
-#     game = "GridWorld"
-#     parameters = {"alpha": 0.1, "epsilon": 0.1, "gamma": 0.999, "nb_iter": 1000}
-#     results_path = f"../results/{game}_sarsa.pkl"
-#     play_game(game, parameters, results_path)
+if __name__ == '__main__':
+    game = "GridWorld"
+    algorithm_name="sarsa"
+    parameters = {"alpha": 0.1,
+                  "epsilon": 0.1,
+                  "gamma": 0.999,
+                  "nb_iter": 10000
+                  }
+    results_path = f"D:/projet_DRL - Copie/tests/test2/results/{game}_sarsa.pkl"
+    play_game(game, parameters, results_path, algorithm_name)

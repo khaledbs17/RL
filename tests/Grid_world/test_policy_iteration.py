@@ -10,7 +10,6 @@ from algorithms.policy_iteration import PolicyIteration
 
 logging.basicConfig(level=logging.INFO)
 
-
 def test_policy_iteration():
     logging.info("Initializing environment...")
     env = GridWorld(width=5, height=5, start=(0, 0), goal=(4, 4), obstacles=[(1, 1), (1, 2), (2, 1), (3, 3)])
@@ -26,12 +25,15 @@ def test_policy_iteration():
     logging.info("Fonction de valeur obtenue:")
     logging.info(value_function)
 
+    logging.info("Policy Changes Over Episodes:")
+    logging.info(agent.policy_changes)
+
     # Sauvegarde de la politique et des fonctions
-    agent.save(r'D:\projet_DRL - Copie\tests\grid_world\policy\policy_iteration_policy.npz')
+    agent.save(r'D:\projet_DRL - Copie\tests\Grid_world\policy\policy_iteration_policy.npz')
     logging.info("Politique et fonctions sauvegardées dans 'policy_iteration_policy.npz'.")
 
     # Chargement de la politique et des fonctions
-    agent.load(r'D:\projet_DRL - Copie\tests\grid_world\policy\policy_iteration_policy.npz')
+    agent.load(r'D:\projet_DRL - Copie\tests\Grid_world\policy\policy_iteration_policy.npz')
     loaded_policy = agent.get_policy()
     loaded_value_function = agent.get_value_function()
     logging.info("Politique chargée:")
@@ -45,8 +47,7 @@ def test_policy_iteration():
     env.render()
     steps = 0
     max_steps = 100
-    done = False
-    while not done and steps < max_steps:
+    while state != env.goal and steps < max_steps:
         action = policy[state]
         state, reward, done, _ = env.step(action)
         env.render()
@@ -65,7 +66,6 @@ def test_policy_iteration():
         state, reward, done, _ = env.step(action)
         env.render()
         logging.info(f"État: {state}, Récompense: {reward}")
-
 
 if __name__ == "__main__":
     test_policy_iteration()

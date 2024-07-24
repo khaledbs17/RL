@@ -6,42 +6,41 @@ from gym.spaces import Tuple
 class PolicyIteration:
     def __init__(self, env):
         self.env = env
-        if isinstance(env.observation_space, Tuple):
-            obs_space_size = tuple(space.n for space in env.observation_space.spaces)
-        else:
-            obs_space_size = (env.observation_space.size,)
-
-        self.policy = np.zeros(obs_space_size, dtype=int)
-        self.value_table = np.zeros(obs_space_size)
+        self.obs_space_size = env.observation_space.size
+        self.act_space_size = len(env.action_space)
+        self.policy = np.zeros(self.obs_space_size, dtype=int)
+        self.value_table = np.zeros(self.obs_space_size)
         self.gamma = 0.99
         self.theta = 1e-6
         self.total_reward = 0
         self.duration = 0
+        self.policy_changes = []
 
     def policy_evaluation(self):
         while True:
             delta = 0
-            for state in range(self.env.observation_space.size):
+            for state in range(self.obs_space_size):
                 v = self.value_table[state]
                 action = self.policy[state]
                 self.value_table[state] = sum([prob * (reward + self.gamma * self.value_table[next_state])
-                                     for prob, next_state, reward, done in self.env.P[state][action]])
+                                               for prob, next_state, reward, done in self.env.P[state][action]])
                 delta = max(delta, abs(v - self.value_table[state]))
             if delta < self.theta:
                 break
 
     def policy_improvement(self):
         policy_stable = True
-        for state in range(self.env.observation_space.size):
+        for state in range(self.obs_space_size):
             old_action = self.policy[state]
-            action_values = np.zeros(self.env.action_space.size)
-            for action in range(self.env.action_space.size):
+            action_values = np.zeros(self.act_space_size)
+            for action in range(self.act_space_size):
                 action_values[action] = sum([prob * (reward + self.gamma * self.value_table[next_state])
                                              for prob, next_state, reward, done in self.env.P[state][action]])
             new_action = np.argmax(action_values)
             self.policy[state] = new_action
             if old_action != new_action:
                 policy_stable = False
+                self.policy_changes.append(state)
         return policy_stable
 
     def train(self):
@@ -73,7 +72,7 @@ class PolicyIteration:
         return self.value_table
 
     def save(self, filepath):
-        np.savez(filepath, policy=self.policy, value_function=self.value_table, total_reward=self.total_reward, duration=self.duration)
+        np.savez(filepath, policy=self.policy, value_function=self.value_table, total_reward=self.total_reward, duration=self.duration, policy_changes=self.policy_changes)
 
     def load(self, filepath):
         data = np.load(filepath)
@@ -81,3 +80,4 @@ class PolicyIteration:
         self.value_table = data['value_function']
         self.total_reward = data['total_reward']
         self.duration = data['duration']
+        self.policy_changes = data['policy_changes']

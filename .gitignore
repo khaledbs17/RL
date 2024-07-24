@@ -10,3 +10,14 @@ env/
 *.ipynb_checkpoints
 .venv/
 .idea
+/existant/
+libs/
+tests/Grid_world/policy/
+tests/line_world/policy/
+tests/Monty_Hall_Lvl1/policy/
+tests/Monty_Hall_Lvl2/policy/
+tests/rock_paper_scissors/policy/
+tests/test2/results/
+tests/test_envs_0/policies/
+tests/test_envs_0/libs/
+

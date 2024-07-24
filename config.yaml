@@ -1,0 +1,21 @@
+LineWorld:
+  size: 7
+  start: 0
+  goal: 6
+  rewards:
+    default: -1
+    goal: 10
+
+GridWorld:
+  size: [5, 5]
+  start_state: [0, 0]
+  terminal_states: [[4, 4]]
+  obstacles: [[1, 1], [2, 2], [3, 3]]
+  rewards:
+    default: -1
+    terminal: 10
+    obstacle: -10
+
+MontyHallLevel2:
+  num_doors: 5
+  num_steps: 4

@@ -1,9 +1,8 @@
 import numpy as np
 from gym.spaces import Discrete, Tuple
 
-
 class MontyHallLevel2:
-    def __init__(self):
+    def __init__(self, config=None):
         self.observation_space = Tuple((Discrete(5), Discrete(4)))  # (porte choisie, étape)
         self.action_space = Discrete(2)  # 0: Stick, 1: Switch
         self.state = None
@@ -43,7 +42,7 @@ class MontyHallLevel2:
         self.step_count = 0
         initial_door = np.random.randint(5)
         self.state = (initial_door, self.step_count)
-        return self.state
+        return self.state_id()
 
     def step(self, action):
         current_door, current_step = self.state
@@ -52,7 +51,7 @@ class MontyHallLevel2:
             # Les 3 premières actions n'ont pas d'effet réel
             self.step_count += 1
             self.state = (current_door, self.step_count)
-            return self.state, 0.0, False, {}
+            return self.state_id(), 0.0, False, {}
         else:
             # Dernière action (4ème)
             if action == 0:  # Stick
@@ -63,11 +62,32 @@ class MontyHallLevel2:
 
             reward = 1.0 if final_door == self.winning_door else 0.0
             self.state = (final_door, 3)
-            return self.state, reward, True, {}
+            return self.state_id(), reward, True, {}
 
     def render(self):
         door, step = self.state
-        print(f"Étape: {step + 1}/4, Porte actuellement choisie: {door}")
-        if step == 3:
-            print(f"Porte gagnante: {self.winning_door}")
-            print(f"Résultat: {'Gagné' if door == self.winning_door else 'Perdu'}")
+        print(f"Step: {step + 1}/4, Current door: {door}")
+        if self.is_game_over():
+            print(f"Winning door: {self.winning_door}")
+            print(f"Result: {'Won' if door == self.winning_door else 'Lost'}")
+
+    def num_states(self):
+        return 5 * 4  # 5 portes, 4 étapes
+
+    def num_actions(self):
+        return self.action_space.n
+
+    def state_id(self):
+        door, step = self.state
+        return door * 4 + step
+
+    def available_actions(self):
+        return list(range(self.action_space.n))
+
+    def is_game_over(self):
+        return self.state[1] == 3
+
+    def score(self):
+        if self.is_game_over():
+            return 1.0 if self.state[0] == self.winning_door else 0.0
+        return 0.0

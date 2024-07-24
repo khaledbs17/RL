@@ -1,6 +1,7 @@
 import numpy as np
-from gym.spaces import Tuple
 import time
+from gym.spaces import Tuple
+
 
 class OnPolicyFirstVisitMCC:
     def __init__(self, env):
@@ -10,7 +11,7 @@ class OnPolicyFirstVisitMCC:
         else:
             obs_space_size = (env.observation_space.size,)
 
-        act_space_size = env.action_space.size
+        act_space_size = len(env.action_space)
         self.q_table = np.zeros(obs_space_size + (act_space_size,))
         self.returns = {}
         self.policy = np.zeros(obs_space_size, dtype=int)
@@ -18,6 +19,7 @@ class OnPolicyFirstVisitMCC:
         self.epsilon = 0.1
         self.total_reward = 0
         self.duration = 0
+        self.policy_changes = []
 
     def state_to_tuple(self, state):
         if isinstance(state, (tuple, list)):
@@ -58,8 +60,11 @@ class OnPolicyFirstVisitMCC:
                     if (state, action) not in self.returns:
                         self.returns[(state, action)] = []
                     self.returns[(state, action)].append(G)
+                    old_action = self.policy[state]
                     self.q_table[state][action] = np.mean(self.returns[(state, action)])
                     self.policy[state] = int(np.argmax(self.q_table[state]))
+                    if old_action != self.policy[state]:
+                        self.policy_changes.append(episode_num)
                 episode_reward += reward
             total_reward += episode_reward
             print(f"Episode {episode_num + 1}/{num_episodes} completed.")
@@ -73,7 +78,7 @@ class OnPolicyFirstVisitMCC:
         return self.q_table
 
     def save(self, filename):
-        np.savez(filename, q_table=self.q_table, policy=self.policy, total_reward=self.total_reward, duration=self.duration)
+        np.savez(filename, q_table=self.q_table, policy=self.policy, total_reward=self.total_reward, duration=self.duration, policy_changes=self.policy_changes)
 
     def load(self, filename):
         data = np.load(filename)
@@ -81,3 +86,4 @@ class OnPolicyFirstVisitMCC:
         self.policy = data['policy']
         self.total_reward = data['total_reward']
         self.duration = data['duration']
+        self.policy_changes = data['policy_changes']

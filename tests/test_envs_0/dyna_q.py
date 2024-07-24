@@ -1,12 +1,9 @@
 import numpy as np
+import time
 from tqdm import tqdm
 import random
 import secret_envs_wrapper
-import environnement_two.grid_world as gw
-import environnement_two.line_world as lw
-import environnement_two.monty_hall_level_2 as mh
 from utils import load_config, calcul_policy, play_a_game_by_Pi, observe_R_S_prime, save_results_to_pickle
-
 
 config_file = "D:\projet_DRL - Copie\config.yaml"
 
@@ -39,8 +36,12 @@ def dyna_q(env, alpha: float = 0.1, epsilon: float = 0.1, gamma: float = 0.999, 
     Q = np.zeros((env.num_states(), env.num_actions()))
     Q = init_Q(env, Q)
     model = {}
+    total_reward = 0
+    start_time = time.time()
+
     for _ in tqdm(range(nb_iter)):
         env.reset()
+        episode_reward = 0
         while not env.is_game_over():
             s = env.state_id()
             available_actions = env.available_actions()
@@ -48,12 +49,16 @@ def dyna_q(env, alpha: float = 0.1, epsilon: float = 0.1, gamma: float = 0.999, 
             reward, s_prime, available_actions_prime = observe_R_S_prime(env, a)
             Q[s, a] = calcul_Q(Q, s, s_prime, a, reward, available_actions_prime, gamma, alpha)
             model[(s, a)] = (reward, s_prime)
+            episode_reward += reward
             for _ in range(n_planning):
                 s, a = random.choice(list(model.keys()))
                 reward, s_prime = model[(s, a)]
                 available_actions_prime = env.available_actions()
                 Q[s, a] = calcul_Q(Q, s, s_prime, a, reward, available_actions_prime, gamma, alpha)
-    return Q
+        total_reward += episode_reward
+
+    training_duration = time.time() - start_time
+    return Q, total_reward, training_duration
 
 
 def play_game(game, parameters, results_path, algorithm_name):
@@ -70,12 +75,6 @@ def play_game(game, parameters, results_path, algorithm_name):
     n_planning = parameters["n_planning"]
 
     match game:
-        case "LineWorld":
-            env = lw.LineWorld(config["size"], config["start"], config["goal"])
-        case "GridWorld":
-            env = gw.GridWorld(config)
-        case "MontyHallLevel2":
-            env = mh.MontyHallLevel2()
         case "SecretEnv0":
             env = secret_envs_wrapper.SecretEnv0()
         case "SecretEnv1":
@@ -91,21 +90,21 @@ def play_game(game, parameters, results_path, algorithm_name):
     print(f"num_states method exists: {'num_states' in dir(env)}")
     print(f"Methods available: {dir(env)}")
 
-    Q_optimal = dyna_q(env, alpha, epsilon, gamma, nb_iter, n_planning)
+    Q_optimal, total_reward, training_duration = dyna_q(env, alpha, epsilon, gamma, nb_iter, n_planning)
     Pi = calcul_policy(Q_optimal)
     env.reset()
-    save_results_to_pickle(Q_optimal, Pi, results_path)
+    save_results_to_pickle(Q_optimal, Pi, results_path, total_reward=total_reward, training_duration=training_duration)
     play_a_game_by_Pi(env, Pi, algorithm_name, game)
 
 
 if __name__ == '__main__':
-    game = "GridWorld"  # Change this to the game you want to play
+    game = "SecretEnv0"  # Change this to the game you want to play
     algorithm_name = "dyna_q"
     parameters = {
         "alpha": 0.1,
         "epsilon": 0.1,
         "gamma": 0.999,
-        "nb_iter": 1000,
+        "nb_iter": 10000,
         "n_planning": 10
     }
     results_path = f"D:/projet_DRL - Copie/tests/test2/results/{game}_dyna_q.pkl"

@@ -50,6 +50,9 @@ class GridWorld:
 
         return next_state, reward, done
 
+    def sample(self):
+        return np.random.choice(self.action_space)
+
     def reset(self):
         self.state = self.start[0] * self.width + self.start[1]
         return self.state

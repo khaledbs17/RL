@@ -109,11 +109,16 @@ def update_Q(Q, s, available_actions, env):
     return Q
 
 
-def save_results_to_pickle(Q, Pi, file_path):
+def save_results_to_pickle(Q, Pi, file_path, total_reward=0, training_duration=0):
     # Crée le dossier si nécessaire
     os.makedirs(os.path.dirname(file_path), exist_ok=True)
 
-    new_data = {'Q': Q, 'Pi': Pi}
+    new_data = {
+        'Q': Q,
+        'Pi': Pi,
+        'total_reward': total_reward,
+        'training_duration': training_duration
+    }
 
     # Convertir le tableau numpy en liste pour la sérialisation, si nécessaire
     if isinstance(Q, np.ndarray):
@@ -137,6 +142,7 @@ def save_results_to_pickle(Q, Pi, file_path):
     # Sauvegarde les données dans le fichier
     with open(file_path, 'wb') as file:
         pickle.dump(data_to_save, file)
+
 
 
 def observe_R_S_prime(env, a):

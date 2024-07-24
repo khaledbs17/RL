@@ -1,15 +1,12 @@
 import numpy as np
 import logging
 import time
-from gym.spaces import Tuple
+
 
 class ValueIteration:
     def __init__(self, env):
         self.env = env
-        if isinstance(env.observation_space, Tuple):
-            obs_space_size = tuple(space.n for space in env.observation_space.spaces)
-        else:
-            obs_space_size = (env.observation_space.size,)
+        obs_space_size = (self.env.width * self.env.height,)
 
         self.V = np.zeros(obs_space_size)
         self.policy = np.zeros(obs_space_size, dtype=int)
@@ -30,7 +27,8 @@ class ValueIteration:
             delta = 0
             for state in range(len(self.V)):
                 v = self.V[state]
-                self.V[state] = max([self.calculate_value(state, action) for action in range(len(self.env.action_space))])
+                self.V[state] = max(
+                    [self.calculate_value(state, action) for action in range((self.env.action_space.size))])
                 delta = max(delta, abs(v - self.V[state]))
             if delta < self.theta:
                 break
@@ -39,8 +37,8 @@ class ValueIteration:
         policy_stable = True
         for state in range(len(self.V)):
             old_action = self.policy[state]
-            action_values = np.zeros(len(self.env.action_space))
-            for action in range(len(self.env.action_space)):
+            action_values = np.zeros((self.env.action_space.size))
+            for action in range((self.env.action_space.size)):
                 action_values[action] = self.calculate_value(state, action)
             new_action = np.argmax(action_values)
             self.policy[state] = new_action
@@ -77,7 +75,8 @@ class ValueIteration:
         return self.V
 
     def save(self, filepath):
-        np.savez(filepath, policy=self.policy, value_function=self.V, total_reward=self.total_reward, duration=self.duration)
+        np.savez(filepath, policy=self.policy, value_function=self.V, total_reward=self.total_reward,
+                 duration=self.duration)
 
     def load(self, filepath):
         data = np.load(filepath)

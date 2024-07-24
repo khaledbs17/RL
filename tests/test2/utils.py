@@ -40,30 +40,45 @@ def calcul_policy(Q):
         return Pi
 
 
-def play_a_game_by_Pi(env, Pi):
+def play_a_game_by_Pi(env, Pi, algorithm_name, game_name):
     random_move = 0
     move = 0
     while not env.is_game_over():
         move += 1
-        env.display()
-        print(env.score())
+        if hasattr(env, 'render'):
+            env.render()
+        elif hasattr(env, 'display'):
+            env.display()
+        print(f"Score: {env.score()}")
         if env.state_id() in Pi:
             a = Pi[env.state_id()]
-            if env.is_forbidden(a):
+            if hasattr(env, 'is_forbidden') and env.is_forbidden(a):
                 a = random.choice(env.available_actions())
                 env.step(a)
-                random_move+=1
+                random_move += 1
             else:
                 env.step(a)
         else:
             a = random.choice(env.available_actions())
             env.step(a)
             random_move += 1
-    env.display()
-    print(env.score())
-    print("a joué : ", random_move, "coup random sur ",move)
-    with open('stratégie_optimal.pkl', 'wb') as fichier:
+    if hasattr(env, 'render'):
+        env.render()
+    elif hasattr(env, 'display'):
+        env.display()
+    print(f"Final Score: {env.score()}")
+    print(f"Random moves: {random_move} out of {move} total moves")
+
+    # Create a directory for storing policies if it doesn't exist
+    policy_dir = 'policies'
+    os.makedirs(policy_dir, exist_ok=True)
+
+    # Create the filename with algorithm name and game name
+    filename = f'{policy_dir}/{algorithm_name}_{game_name}_policy.pkl'
+
+    with open(filename, 'wb') as fichier:
         pickle.dump(Pi, fichier)
+    print(f"Policy saved as {filename}")
 
 
 def choose_action(Q, s, available_actions, epsilon):
@@ -94,11 +109,16 @@ def update_Q(Q, s, available_actions, env):
     return Q
 
 
-def save_results_to_pickle(Q, Pi, file_path):
+def save_results_to_pickle(Q, Pi, file_path, total_reward=0, training_duration=0):
     # Crée le dossier si nécessaire
     os.makedirs(os.path.dirname(file_path), exist_ok=True)
 
-    new_data = {'Q': Q, 'Pi': Pi}
+    new_data = {
+        'Q': Q,
+        'Pi': Pi,
+        'total_reward': total_reward,
+        'training_duration': training_duration
+    }
 
     # Convertir le tableau numpy en liste pour la sérialisation, si nécessaire
     if isinstance(Q, np.ndarray):
@@ -122,6 +142,7 @@ def save_results_to_pickle(Q, Pi, file_path):
     # Sauvegarde les données dans le fichier
     with open(file_path, 'wb') as file:
         pickle.dump(data_to_save, file)
+
 
 
 def observe_R_S_prime(env, a):

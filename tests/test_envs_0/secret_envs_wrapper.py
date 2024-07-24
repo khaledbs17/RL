@@ -4,7 +4,7 @@ import platform
 import numpy as np
 
 if platform.system().lower() == "windows":
-    lib_path = "./libs/secret_envs.dll"
+    lib_path = "D:/projet_DRL - Copie/tests/test_envs_0/secret_envs.dll"
 elif platform.system().lower() == "linux":
     lib_path = "./libs/libsecret_envs.so"
 elif platform.system().lower() == "darwin":

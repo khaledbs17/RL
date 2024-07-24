@@ -8,7 +8,6 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../'
 from environments.grid_world import GridWorld
 from algorithms.monte_carlo_es import MonteCarloES
 
-
 def test_monte_carlo_es():
     print("Initializing environment...")
     env = GridWorld(width=5, height=5, start=(0, 0), goal=(4, 4), obstacles=[(1, 1), (1, 2), (2, 1), (3, 3)])
@@ -17,9 +16,7 @@ def test_monte_carlo_es():
     print("Starting training...")
 
     num_episodes = 10000  # Réduire le nombre d'épisodes pour les tests
-    for episode in range(num_episodes):
-        agent.train(num_episodes=1)
-        print(f"Training progress: Episode {episode + 1}/{num_episodes}")
+    agent.train(num_episodes=num_episodes)
 
     policy = agent.get_policy()
     action_value_function = agent.get_action_value_function()
@@ -48,8 +45,7 @@ def test_monte_carlo_es():
     env.render()
     steps = 0
     max_steps = 100
-    done = False
-    while not done and steps < max_steps:
+    while state != env.goal and steps < max_steps:
         action = policy[state]
         state, reward, done, _ = env.step(action)
         env.render()
@@ -68,7 +64,6 @@ def test_monte_carlo_es():
         state, reward, done, _ = env.step(action)
         env.render()
         print(f"État: {state}, Récompense: {reward}")
-
 
 if __name__ == "__main__":
     test_monte_carlo_es()

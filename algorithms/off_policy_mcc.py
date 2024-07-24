@@ -1,6 +1,6 @@
 import numpy as np
-from gym.spaces import Tuple
 import time
+from gym.spaces import Tuple
 
 class OffPolicyMCC:
     def __init__(self, env):
@@ -10,13 +10,14 @@ class OffPolicyMCC:
         else:
             obs_space_size = (env.observation_space.size,)
 
-        act_space_size = env.action_space.size
+        act_space_size = len(env.action_space)
         self.q_table = np.zeros(obs_space_size + (act_space_size,))
         self.c_table = np.zeros(obs_space_size + (act_space_size,))
-        self.policy = np.zeros(obs_space_size, dtype=int)  # Actions uniques
+        self.policy = np.zeros(obs_space_size, dtype=int)
         self.gamma = 0.99
         self.total_reward = 0
         self.duration = 0
+        self.policy_changes = []
 
     def state_to_tuple(self, state):
         if isinstance(state, (tuple, list)):
@@ -25,17 +26,17 @@ class OffPolicyMCC:
             return (int(state),)
 
     def choose_action(self, state):
-        if np.random.rand() < 0.5:  # Choix aléatoire pour l'exemple
-            return int(np.random.choice(self.env.action_space))  # Exploration aléatoire
+        if np.random.rand() < 0.5:
+            return int(np.random.choice(self.env.action_space))
         else:
-            return int(self.policy[self.state_to_tuple(state)])  # Exploitation de la politique actuelle
+            return int(self.policy[self.state_to_tuple(state)])
 
     def generate_episode(self):
         episode = []
         state = self.env.reset()
         done = False
         while not done:
-            action = self.choose_action(state)  # Utilisation de choose_action
+            action = self.choose_action(state)
             next_state, reward, done, _ = self.env.step(action)
             episode.append((self.state_to_tuple(state), action, reward))
             state = next_state
@@ -54,10 +55,13 @@ class OffPolicyMCC:
                 G = self.gamma * G + reward
                 self.c_table[state_action] += W
                 self.q_table[state_action] += (W / self.c_table[state_action]) * (G - self.q_table[state_action])
-                self.policy[state] = int(np.argmax(self.q_table[state]))  # Assurer que l'action est un entier
+                old_action = self.policy[state]
+                self.policy[state] = int(np.argmax(self.q_table[state]))
+                if old_action != self.policy[state]:
+                    self.policy_changes.append(episode_num)
                 if action != self.policy[state]:
                     break
-                W *= 1.0  # En supposant une politique comportementale uniforme aléatoire
+                W *= 1.0
                 episode_reward += reward
             total_reward += episode_reward
             print(f"Episode {episode_num + 1}/{num_episodes} completed.")
@@ -71,7 +75,7 @@ class OffPolicyMCC:
         return self.q_table
 
     def save(self, filename):
-        np.savez(filename, q_table=self.q_table, policy=self.policy, total_reward=self.total_reward, duration=self.duration)
+        np.savez(filename, q_table=self.q_table, policy=self.policy, total_reward=self.total_reward, duration=self.duration, policy_changes=self.policy_changes)
 
     def load(self, filename):
         data = np.load(filename)
@@ -79,3 +83,4 @@ class OffPolicyMCC:
         self.policy = data['policy']
         self.total_reward = data['total_reward']
         self.duration = data['duration']
+        self.policy_changes = data['policy_changes']

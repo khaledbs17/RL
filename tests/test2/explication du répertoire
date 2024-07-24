@@ -1,0 +1,3 @@
+Dans ce répertoire on a développé d'une meilleure façon nos algorithmes en se basnt sur les wrappers.
+On a testé les algorithmes de TD (q_learning, sarsa, dyna_q) sur les environnements suivants : line World, Grid world et Monty Hall 2.
+Les résultats des politiques (fichiers .pkl) se trouvent dans le dossier results.

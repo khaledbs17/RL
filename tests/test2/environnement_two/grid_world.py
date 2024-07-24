@@ -1,15 +1,15 @@
 import numpy as np
 
 class GridWorld:
-    def __init__(self, width, height, start, goal, obstacles):
-        self.width = width
-        self.height = height
-        self.start = start
-        self.goal = goal
-        self.obstacles = obstacles
-        self.state = start[0] * width + start[1]
+    def __init__(self, config):
+        self.width = config['size'][0]
+        self.height = config['size'][1]
+        self.start = tuple(config['start_state'])
+        self.goal = tuple(config['terminal_states'][0])
+        self.obstacles = [tuple(obs) for obs in config['obstacles']]
+        self.state = self.start[0] * self.width + self.start[1]
         self.action_space = np.array([0, 1, 2, 3])  # 0: up, 1: down, 2: left, 3: right
-        self.observation_space = np.arange(width * height)
+        self.observation_space = np.arange(self.width * self.height)
         self.P = self._create_transition_probabilities()
 
     def _create_transition_probabilities(self):
@@ -41,17 +41,17 @@ class GridWorld:
         if (y, x) in self.obstacles:
             next_state = state[0] * self.width + state[1]
 
-        reward = -0.1  # Une petite pénalité pour chaque mouvement
+        reward = -1  # Default reward from config
         if (y, x) == self.goal:
-            reward = 1.0
+            reward = 10  # Goal reward from config
             done = True
+        elif (y, x) in self.obstacles:
+            reward = -10  # Obstacle reward from config
+            done = False
         else:
             done = False
 
         return next_state, reward, done
-
-    def sample(self):
-        return np.random.choice(self.action_space)
 
     def reset(self):
         self.state = self.start[0] * self.width + self.start[1]
@@ -60,7 +60,7 @@ class GridWorld:
     def step(self, action):
         next_state, reward, done = self._take_action(divmod(self.state, self.width), action)
         self.state = next_state
-        return self.state, reward, done, {}
+        return next_state, reward, done, {}
 
     def render(self):
         grid = [['-' for _ in range(self.width)] for _ in range(self.height)]
@@ -75,3 +75,21 @@ class GridWorld:
         for row in grid:
             print(' '.join(row))
         print()  # Pour ajouter une ligne vide entre les rendus
+
+    def num_states(self):
+        return self.width * self.height
+
+    def num_actions(self):
+        return len(self.action_space)
+
+    def state_id(self):
+        return self.state
+
+    def available_actions(self):
+        return list(range(self.num_actions()))
+
+    def is_game_over(self):
+        return self.state == self.goal[0] * self.width + self.goal[1]
+
+    def score(self):
+        return 1.0 if self.is_game_over() else 0.0

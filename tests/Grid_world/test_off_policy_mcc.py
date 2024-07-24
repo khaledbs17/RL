@@ -8,7 +8,6 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../'
 from environments.grid_world import GridWorld
 from algorithms.off_policy_mcc import OffPolicyMCC
 
-
 def test_off_policy_mcc():
     print("Initializing environment...")
     env = GridWorld(width=5, height=5, start=(0, 0), goal=(4, 4), obstacles=[(1, 1), (1, 2), (2, 1), (3, 3)])
@@ -17,9 +16,7 @@ def test_off_policy_mcc():
     print("Starting training...")
 
     num_episodes = 10000  # Réduire le nombre d'épisodes pour les tests
-    for episode in range(num_episodes):
-        agent.train(num_episodes=1)
-        print(f"Training progress: Episode {episode + 1}/{num_episodes}")
+    agent.train(num_episodes=num_episodes)
 
     policy = agent.get_policy()
     action_value_function = agent.get_action_value_function()
@@ -28,6 +25,9 @@ def test_off_policy_mcc():
     print(policy)
     print("Fonction de valeur-action obtenue:")
     print(action_value_function)
+
+    print("Policy Changes Over Episodes:")
+    print(agent.policy_changes)
 
     # Sauvegarde de la politique et des fonctions
     agent.save(r'D:\projet_DRL - Copie\tests\Grid_world\policy\off_policy_mcc_policy.npz')
@@ -48,8 +48,7 @@ def test_off_policy_mcc():
     env.render()
     steps = 0
     max_steps = 100
-    done = False
-    while not done and steps < max_steps:
+    while state != env.goal and steps < max_steps:
         action = policy[state]
         state, reward, done, _ = env.step(action)
         env.render()
@@ -68,7 +67,6 @@ def test_off_policy_mcc():
         state, reward, done, _ = env.step(action)
         env.render()
         print(f"État: {state}, Récompense: {reward}")
-
 
 if __name__ == "__main__":
     test_off_policy_mcc()

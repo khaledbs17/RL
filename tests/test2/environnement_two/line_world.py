@@ -1,13 +1,13 @@
 from gym.spaces import Discrete
 import numpy as np
 
-
 class LineWorld:
     def __init__(self, length, start, goal):
+        print(f"Initializing LineWorld with length={length}, start={start}, goal={goal}")
         self.length = length
         self.start = start
         self.goal = goal
-        self.current_state = start
+        self.state = start
         self.observation_space = Discrete(length)
         self.action_space = Discrete(2)
         self.P = self._build_transition_probabilities()
@@ -17,15 +17,12 @@ class LineWorld:
         return self.state
 
     def step(self, action):
-        print(f"Received action: {action}, Type: {type(action)}")  # Debugging print
         if isinstance(action, np.ndarray):
             if action.size == 1:
-                action = action.item()  # Convertir le tableau en entier s'il s'agit d'un tableau NumPy
+                action = action.item()
             else:
                 raise ValueError("Action array must have size 1")
-        action = int(action)  # Convertir explicitement l'action en int
-        if not isinstance(action, int):
-            raise ValueError("Action must be an integer")
+        action = int(action)
         if action == 0:  # gauche
             self.state = max(0, self.state - 1)
         elif action == 1:  # droite
@@ -58,8 +55,20 @@ class LineWorld:
                 P[state][action].append((1.0, next_state, reward, done))
         return P
 
-    def observation_space_size(self):
+    def num_states(self):
         return self.length
 
-    def action_space_size(self):
-        return 2
+    def num_actions(self):
+        return self.action_space.n
+
+    def state_id(self):
+        return self.state
+
+    def available_actions(self):
+        return list(range(self.action_space.n))
+
+    def is_game_over(self):
+        return self.state == self.goal
+
+    def score(self):
+        return 1.0 if self.state == self.goal else 0.0
